@@ -119,6 +119,29 @@ jobs:
         - name: Verify install kubectl
           run: kubectl version -o yaml
 
+        - name: NGINX INGRESS CONTROLLER
+          run: echo "INGRESS_IP=$(kubectl -n ingress-nginx get services ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}') >> GITHUB_ENV"
+
+
+        - name: Replace tokens in manifests
+          uses: cschleiden/replace-tokens@v1
+          with:
+            files: 'kubernetes/development/*.yaml'  # Directory and file pattern for replacement
+            tokenPrefix: '_{_'    # Placeholder prefix (e.g., #{NAMESPACE}#)
+            tokenSuffix: '_}_'    # Placeholder suffix
+          env:
+            NAMESPACE: ${{ env.NAMESPACE }}
+            REPLICAS: ${{ env.REPLICAS }}
+            IMAGE: ghcr.io/${{ github.actor }}/solar-system:${{ github.sha }}
+            INGRESS_IP: ${{ env.INGRESS_IP }}
+
+        - name: check the files with replaced values
+          run: cat kubernetes/development/*.yaml
+  
+
+
+
+
        
           
           
